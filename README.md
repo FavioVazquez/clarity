@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/banner.png" alt="clarity — map what you know" width="100%" />
+  <img src="assets/banner.png" alt="clarity" width="100%" />
   <br/><br/>
   <p><strong>A knowledge mapping skill for projects built with AI agents.</strong></p>
 
@@ -114,7 +114,7 @@ AI coding agents write code faster than developers can understand it.
 Research from early 2026 puts the gap at 5-7x: agents produce 140-200 lines per
 minute; a developer reads and genuinely understands 20-40 lines per minute. Over a
 full session, the delta compounds. Over a full project, it becomes a liability
-that does not show up in tests, linters, or code review — it shows up when
+that does not show up in tests, linters, or code review. It shows up when
 something breaks and no one knows why.
 
 This is **cognitive debt**: the gap between what the agent built and what the
@@ -125,7 +125,7 @@ well-structured, test-covered code and still have cognitive debt.
 `clarity` makes it visible.
 
 <p align="center">
-  <img src="assets/debt_timeline.png" alt="Cognitive Debt — the gap between what your agent built and what you understand" width="100%" />
+  <img src="assets/debt_timeline.png" alt="Cognitive Debt: the gap between what your agent built and what you understand" width="100%" />
 </p>
 
 ---
@@ -133,13 +133,13 @@ well-structured, test-covered code and still have cognitive debt.
 ## What clarity does
 
 Six actions, one job: make the human's understanding of the project a first-class,
-persistent artifact — and help build that understanding when it is missing.
+persistent artifact, and help build that understanding when it is missing.
 
 | Action | What it produces |
 |--------|-----------------|
 | `map` | Classifies each module as Green / Yellow / Red based on your answers. Writes `CLARITY_MAP.md` and `clarity-graph.html`. |
 | `debt` | Measures comprehension from a git diff, a full codebase scan, or your session description. Logs a Comprehension Score. |
-| `review` | Autonomous agent scan — reads the codebase and produces risk estimates with no user input. Writes `CLARITY_REVIEW.md`. |
+| `review` | Autonomous agent scan: reads the codebase and produces risk estimates with no user input. Writes `CLARITY_REVIEW.md`. |
 | `explain` | Agent teaches you a specific module interactively. Optional `--quiz` to verify and record comprehension. |
 | `handoff` | Generates `CLARITY_HANDOFF.md`. Works with or without a map. `--cold` for autonomous handoff with no user input. |
 | `status` | Concise snapshot of user-verified zones, agent estimates, debt score, and last dates. |
@@ -149,11 +149,11 @@ persistent artifact — and help build that understanding when it is missing.
 ## The visual map
 
 When you run `map` or `debt`, the agent generates `clarity-graph.html` in your
-project root. Open it in any browser — no server, no build step.
+project root. Open it in any browser. No server, no build step.
 
 The graph shows every module as a node. Green nodes are understood. Yellow nodes
 have gaps. Red nodes are risk zones. Edges show dependencies between modules.
-An edge that connects a Green node to a Red node turns orange — a propagation
+An edge that connects a Green node to a Red node turns orange, marking a propagation
 path where a misunderstood module can affect something you thought you knew.
 
 The graph ages. Nodes darken over time if they have not been evaluated recently,
@@ -164,7 +164,7 @@ decision captured, the last Comprehension Score, and when the module was last
 evaluated.
 
 <p align="center">
-  <img src="assets/graph_preview.png" alt="clarity-graph.html — interactive knowledge map" width="100%" />
+  <img src="assets/graph_preview.png" alt="clarity-graph.html interactive knowledge map" width="100%" />
 </p>
 
 ---
@@ -172,14 +172,14 @@ evaluated.
 ## Actions
 
 <p align="center">
-  <img src="assets/actions_map.png" alt="Six Actions — a navigation instrument for your codebase comprehension" width="100%" />
+  <img src="assets/actions_map.png" alt="Six Actions: a navigation instrument for your codebase comprehension" width="100%" />
 </p>
 
 ### `map`
 
 Builds the knowledge map for the project. The agent walks through each module,
 asks two questions (what it does, and what the key decision behind it was), and
-classifies each one based on your answer — not its own analysis.
+classifies each one based on your answer, not its own analysis.
 
 Use `--explain` when starting in unfamiliar territory: the agent gives a 2-3 sentence
 reading of each module before asking you, so you have something to react to instead
@@ -210,10 +210,10 @@ The three zones:
 
 ### `debt`
 
-Measures cognitive debt from three possible sources — auto-selected based on context:
+Measures cognitive debt from three possible sources, auto-selected based on context:
 
 - **Diff mode** (default): reads `git diff HEAD~1 HEAD` when git is available
-- **Scan mode** (`--scan`): reads the codebase directly and picks the most complex areas — no git required
+- **Scan mode** (`--scan`): reads the codebase directly and picks the most complex areas. No git required.
 - **Session mode** (`--session`): asks you what was built, then forms questions from your description
 
 For each source, the agent picks three areas of meaningful logic and asks one what,
@@ -239,7 +239,7 @@ the agent flags the session as a debt alert.
 
 ### `review`
 
-Autonomous agent codebase scan — no questions asked. The agent reads every module
+Autonomous agent codebase scan with no questions asked. The agent reads every module
 and classifies them by risk signals: complexity, coupling, opacity, churn, and
 AI-generation patterns. All zones are marked `(agent estimate)` to distinguish
 them from user-verified comprehension.
@@ -259,13 +259,13 @@ a structural overview before deciding where to focus `map` or `explain`.
 @clarity review --deep
 ```
 
-Produces `CLARITY_REVIEW.md`. Does not write to `CLARITY_MAP.md` — run
+Produces `CLARITY_REVIEW.md`. Does not write to `CLARITY_MAP.md`. Run
 `map --module <name>` to promote any estimate to a user-verified zone.
 
 ### `explain`
 
 The Feynman technique in reverse. Instead of asking you to explain, the agent
-explains the module to you — layered, plain-language, pausing after each layer
+explains the module to you in layered, plain-language form, pausing after each layer
 for questions. Use it when a module is Red and you want to address it, or when
 a new team member needs to understand a specific area first.
 
@@ -288,13 +288,13 @@ is not in the code. Works with or without an existing map:
 
 - **With a map:** uses user-verified zones and the full debt history
 - **Without a map:** reads the codebase directly and produces an agent-estimated handoff, clearly marked
-- **`--cold`:** fully autonomous — no user input at all. For when someone is leaving with no time for a map session.
+- **`--cold`:** fully autonomous, no user input at all. For when someone is leaving with no time for a map session.
 
 ```
 # Claude Code
 /clarity handoff               # generate handoff (with or without map)
 /clarity handoff --cold        # fully autonomous handoff, no user input
-/clarity handoff --import      # you are the new person — agent guides you through it
+/clarity handoff --import      # you are the new person, agent guides you through it
 /clarity handoff --sync        # after onboarding, update the map
 
 # Windsurf / others
@@ -304,13 +304,13 @@ is not in the code. Works with or without an existing map:
 @clarity handoff --sync
 ```
 
-`--import` no longer requires a handoff file. If no handoff or map exists, the
+`--import` does not require a handoff file. If no handoff or map exists, the
 agent offers to run `review` first and uses that as the onboarding base.
 
 ### `status`
 
 A concise snapshot of user-verified zones, agent estimates, debt score, and
-last activity dates. Works even when no files exist — recommends a starting action.
+last activity dates. Works even when no files exist, and recommends a starting action.
 
 ```
 # Claude Code
@@ -340,17 +340,17 @@ connects a well-understood module to a risk zone.
 - A timeline panel at the bottom shows the Comprehension Score history
 
 The agent updates the graph whenever you run `map` or `debt`. It is a single
-static file — commit it, share it, or open it offline.
+static file. Commit it, share it, or open it offline.
 
 ---
 
 ## Files written to your project
 
 ```
-CLARITY_MAP.md      user-verified knowledge map — zones, debt log, open questions
-CLARITY_REVIEW.md   agent-estimated risk scan — written by review or handoff --cold
-CLARITY_HANDOFF.md  context transfer document — written by handoff
-clarity-graph.html  interactive visual map — generated by map and debt
+CLARITY_MAP.md      user-verified knowledge map (zones, debt log, open questions)
+CLARITY_REVIEW.md   agent-estimated risk scan (written by review or handoff --cold)
+CLARITY_HANDOFF.md  context transfer document (written by handoff)
+clarity-graph.html  interactive visual map (generated by map and debt)
 ```
 
 `CLARITY_MAP.md` and `CLARITY_REVIEW.md` are kept separate on purpose: one records
@@ -381,7 +381,7 @@ already tracks, but does not require it.
 
 The three-zone classification is based on the Feynman technique: if you can
 explain something simply, in your own words, without hedging, you understand it.
-If you can't, you have a gap — regardless of whether the code runs.
+If you can't, you have a gap, regardless of whether the code runs.
 
 Cognitive debt research (2026) documents a consistent 5-7x gap between AI agent
 output velocity and human comprehension velocity. The gap compounds across sessions
@@ -403,7 +403,7 @@ for this skill.
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT. See [LICENSE](LICENSE)
 
 ---
 
