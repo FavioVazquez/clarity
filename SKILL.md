@@ -271,7 +271,8 @@ produces a risk and complexity report on its own. Useful for:
    - **Red (agent estimate):** High complexity, high coupling, or significant opacity
      — the agent cannot confidently explain the intent from the code alone
 
-4. **Write a `CLARITY_REVIEW.md`** to the project root. Include:
+4. **Write a `CLARITY_REVIEW.md`** to the project root using the template at
+   [templates/CLARITY_REVIEW.md](templates/CLARITY_REVIEW.md). Include:
    - Review date and method (autonomous scan, no user input)
    - Module table: name, agent-estimated zone, primary risk signal, one-line note
    - Top 3 recommended next steps: which modules to `explain` or `map` first, and why

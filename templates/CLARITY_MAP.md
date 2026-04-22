@@ -23,7 +23,7 @@ The three zones reflect your ability to explain the module, not its code quality
 
 ## Module Details
 
-<!-- One section per module. Added by @clarity map. -->
+<!-- One section per module. Added by clarity map. -->
 
 ### {{MODULE_NAME}}
 
@@ -37,11 +37,11 @@ The three zones reflect your ability to explain the module, not its code quality
 
 ## Cognitive Debt Log
 
-Scores logged by `@clarity debt`. Each row is one session.
+Scores logged by `clarity debt`. Each row is one session.
 
-| Date | Score | Alert | Notes |
-|------|-------|-------|-------|
-| {{DATE}} | {{SCORE}}/100 | {{ALERT}} | {{NOTES}} |
+| Date | Score | Mode | Alert | Notes |
+|------|-------|------|-------|-------|
+| {{DATE}} | {{SCORE}}/100 | {{MODE}} | {{ALERT}} | {{NOTES}} |
 
 **Running average (last 5 sessions):** {{RUNNING_AVG}}/100
 
@@ -50,7 +50,7 @@ Scores logged by `@clarity debt`. Each row is one session.
 ## Open Questions
 
 Things captured during map or debt sessions that remain unresolved.
-Review these before running `@clarity handoff`.
+Review these before running `clarity handoff`.
 
 - [ ] {{OPEN_QUESTION}}
 
@@ -58,7 +58,7 @@ Review these before running `@clarity handoff`.
 
 ## Onboarding Sessions
 
-<!-- Added by @clarity handoff --import and @clarity handoff --sync -->
+<!-- Added by clarity handoff --import and clarity handoff --sync -->
 
 ### Onboarding — {{DATE}}
 
