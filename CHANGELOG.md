@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 — 2026-04-22
+
+### Fixes
+- `templates/CLARITY_MAP.md`: bare `clarity debt` and `clarity handoff` references now show both `/clarity X` (Claude Code) and `@clarity X` (Windsurf) so users reading the generated file know exactly what to type.
+- `templates/CLARITY_HANDOFF.md`: footer updated to show both invocation forms.
+- `templates/CLARITY_REVIEW.md`: blockquote and how-to-use section updated to show both invocation forms throughout.
+
 ## 1.1.0 — 2026-04-22
 
 ### New actions

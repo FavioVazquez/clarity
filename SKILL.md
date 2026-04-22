@@ -12,7 +12,7 @@ license: MIT
 compatibility: Works with any AgentSkills-compatible agent — Claude Code, Windsurf, Cursor, GitHub Copilot, Gemini CLI, Amp, Warp, Cline, Codex, and more.
 metadata:
   author: favio-vazquez
-  version: "1.1"
+  version: "1.1.1"
 ---
 
 # clarity
