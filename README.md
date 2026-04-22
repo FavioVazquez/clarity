@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/banner.png" alt="clarity" width="720" />
+  <img src="assets/banner.png" alt="clarity — map what you know" width="100%" />
   <br/><br/>
   <p><strong>A knowledge mapping skill for projects built with AI agents.</strong></p>
 
@@ -124,6 +124,10 @@ well-structured, test-covered code and still have cognitive debt.
 
 `clarity` makes it visible.
 
+<p align="center">
+  <img src="assets/debt_timeline.png" alt="Cognitive Debt — the gap between what your agent built and what you understand" width="100%" />
+</p>
+
 ---
 
 ## What clarity does
@@ -159,9 +163,17 @@ Click any node to see the detail panel: the user's own explanation, the key
 decision captured, the last Comprehension Score, and when the module was last
 evaluated.
 
+<p align="center">
+  <img src="assets/graph_preview.png" alt="clarity-graph.html — interactive knowledge map" width="100%" />
+</p>
+
 ---
 
 ## Actions
+
+<p align="center">
+  <img src="assets/actions_map.png" alt="Six Actions — a navigation instrument for your codebase comprehension" width="100%" />
+</p>
 
 ### `map`
 
@@ -191,6 +203,10 @@ The three zones:
 - **Green:** You explained what it does and why it is built that way.
 - **Yellow:** You knew the what but not the why, or your explanation matched the surface but missed the mechanism.
 - **Red:** You could not explain it, said "I think," said "the AI wrote it," or contradicted the actual code.
+
+<p align="center">
+  <img src="assets/zones.png" alt="The Three Knowledge Zones" width="100%" />
+</p>
 
 ### `debt`
 
