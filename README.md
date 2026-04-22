@@ -4,7 +4,7 @@
   <p><strong>A knowledge mapping skill for projects built with AI agents.</strong></p>
 
   <p>
-    <a href="https://github.com/FavioVazquez/clarity/releases"><img src="https://img.shields.io/badge/version-1.0-1b3a57?style=flat-square" alt="version"></a>
+    <a href="https://github.com/FavioVazquez/clarity/releases"><img src="https://img.shields.io/badge/version-1.1-1b3a57?style=flat-square" alt="version"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-00bcd4?style=flat-square" alt="license"></a>
     <a href="https://agentskills.io/specification"><img src="https://img.shields.io/badge/AgentSkills-compatible-1b3a57?style=flat-square" alt="AgentSkills compatible"></a>
     <a href="https://skills.sh/FavioVazquez/clarity"><img src="https://img.shields.io/badge/skills.sh-installable-00bcd4?style=flat-square" alt="skills.sh"></a>
@@ -97,7 +97,11 @@ Quick reference:
 |--------------------|-------------|-------------------|
 | Build the knowledge map | `/clarity map` | `@clarity map` |
 | Measure cognitive debt from today's session | `/clarity debt` | `@clarity debt` |
+| Measure comprehension with no git or diff | `/clarity debt --scan` | `@clarity debt --scan` |
+| Autonomous risk scan, no questions asked | `/clarity review` | `@clarity review` |
+| Have the agent teach you a specific module | `/clarity explain <module>` | `@clarity explain <module>` |
 | Generate a handoff document | `/clarity handoff` | `@clarity handoff` |
+| Quick handoff with no time for a map session | `/clarity handoff --cold` | `@clarity handoff --cold` |
 | Onboard as a new team member | `/clarity handoff --import` | `@clarity handoff --import` |
 | See the project knowledge snapshot | `/clarity status` | `@clarity status` |
 
@@ -124,22 +128,24 @@ well-structured, test-covered code and still have cognitive debt.
 
 ## What clarity does
 
-Four actions, one job: track the human's understanding of the project as a
-persistent, versioned artifact.
+Six actions, one job: make the human's understanding of the project a first-class,
+persistent artifact — and help build that understanding when it is missing.
 
 | Action | What it produces |
 |--------|-----------------|
-| `map` | Classifies each module as Green / Yellow / Red based on your answers, writes `CLARITY_MAP.md`, generates `clarity-graph.html` |
-| `debt` | Asks 3 questions derived from your last diff, scores your answers, logs a Comprehension Score to `CLARITY_MAP.md` |
-| `handoff` | Generates `CLARITY_HANDOFF.md` for a new team member, or guides you through an existing one with `--import` |
-| `status` | Shows a concise snapshot of zones, debt score, and last handoff date |
+| `map` | Classifies each module as Green / Yellow / Red based on your answers. Writes `CLARITY_MAP.md` and `clarity-graph.html`. |
+| `debt` | Measures comprehension from a git diff, a full codebase scan, or your session description. Logs a Comprehension Score. |
+| `review` | Autonomous agent scan — reads the codebase and produces risk estimates with no user input. Writes `CLARITY_REVIEW.md`. |
+| `explain` | Agent teaches you a specific module interactively. Optional `--quiz` to verify and record comprehension. |
+| `handoff` | Generates `CLARITY_HANDOFF.md`. Works with or without a map. `--cold` for autonomous handoff with no user input. |
+| `status` | Concise snapshot of user-verified zones, agent estimates, debt score, and last dates. |
 
 ---
 
 ## The visual map
 
-When you run `map`, the agent generates `clarity-graph.html` in your project
-root. Open it in any browser — no server, no build step.
+When you run `map` or `debt`, the agent generates `clarity-graph.html` in your
+project root. Open it in any browser — no server, no build step.
 
 The graph shows every module as a node. Green nodes are understood. Yellow nodes
 have gaps. Red nodes are risk zones. Edges show dependencies between modules.
@@ -163,69 +169,132 @@ Builds the knowledge map for the project. The agent walks through each module,
 asks two questions (what it does, and what the key decision behind it was), and
 classifies each one based on your answer — not its own analysis.
 
+Use `--explain` when starting in unfamiliar territory: the agent gives a 2-3 sentence
+reading of each module before asking you, so you have something to react to instead
+of a blank page.
+
 ```
 # Claude Code
 /clarity map
-/clarity map --quick       # only new, Red, or Yellow modules
-/clarity map --module auth # evaluate one module
+/clarity map --quick         # only new, Red, or Yellow modules
+/clarity map --module auth   # evaluate one module
+/clarity map --explain       # agent reads each module first, then asks
 
 # Windsurf / others
 @clarity map
 @clarity map --quick
 @clarity map --module auth
+@clarity map --explain
 ```
 
 The three zones:
 - **Green:** You explained what it does and why it is built that way.
-- **Yellow:** You knew the what but not the why, or hedged on the key decision.
-- **Red:** You could not explain it, said "I think," or said "the AI wrote it."
+- **Yellow:** You knew the what but not the why, or your explanation matched the surface but missed the mechanism.
+- **Red:** You could not explain it, said "I think," said "the AI wrote it," or contradicted the actual code.
 
 ### `debt`
 
-Measures cognitive debt from the most recent build session. The agent reads your
-last git diff, picks three areas of meaningful logic, and asks:
+Measures cognitive debt from three possible sources — auto-selected based on context:
 
-- **What** a specific function does
-- **Why** a specific approach was used instead of the obvious alternative
-- **What happens if** a specific edge case occurs
+- **Diff mode** (default): reads `git diff HEAD~1 HEAD` when git is available
+- **Scan mode** (`--scan`): reads the codebase directly and picks the most complex areas — no git required
+- **Session mode** (`--session`): asks you what was built, then forms questions from your description
 
-Each answer is scored 0-100. The session Comprehension Score is the average.
-If it falls below the threshold (default: 70), the agent flags the session as
-a debt alert.
+For each source, the agent picks three areas of meaningful logic and asks one what,
+one why, and one what-if question. Answers are scored 0-100. The session
+Comprehension Score is the average. If it falls below the threshold (default: 70),
+the agent flags the session as a debt alert.
 
 ```
 # Claude Code
-/clarity debt
-/clarity debt --history
+/clarity debt              # auto-selects mode
+/clarity debt --scan       # read codebase directly, no git needed
+/clarity debt --session    # describe what you built, then get questions
+/clarity debt --history    # show full debt log
 /clarity debt --threshold 60
 
 # Windsurf / others
 @clarity debt
+@clarity debt --scan
+@clarity debt --session
 @clarity debt --history
 @clarity debt --threshold 60
 ```
 
-### `handoff`
+### `review`
 
-Produces a `CLARITY_HANDOFF.md` that captures everything the next person needs
-to know that is not in the code: which areas are understood, which are not,
-what the open questions are, and what to do first.
+Autonomous agent codebase scan — no questions asked. The agent reads every module
+and classifies them by risk signals: complexity, coupling, opacity, churn, and
+AI-generation patterns. All zones are marked `(agent estimate)` to distinguish
+them from user-verified comprehension.
+
+Use it when joining an unfamiliar project, before a refactor, or when you want
+a structural overview before deciding where to focus `map` or `explain`.
 
 ```
 # Claude Code
-/clarity handoff           # generate the handoff document
-/clarity handoff --import  # you are the new person — agent guides you through it
-/clarity handoff --sync    # after onboarding, update the map with new understanding
+/clarity review            # full scan
+/clarity review --module auth  # review one module
+/clarity review --deep     # adds plain-language descriptions of Red-estimated modules
+
+# Windsurf / others
+@clarity review
+@clarity review --module auth
+@clarity review --deep
+```
+
+Produces `CLARITY_REVIEW.md`. Does not write to `CLARITY_MAP.md` — run
+`map --module <name>` to promote any estimate to a user-verified zone.
+
+### `explain`
+
+The Feynman technique in reverse. Instead of asking you to explain, the agent
+explains the module to you — layered, plain-language, pausing after each layer
+for questions. Use it when a module is Red and you want to address it, or when
+a new team member needs to understand a specific area first.
+
+With `--quiz`, the agent checks comprehension at the end and updates `CLARITY_MAP.md`.
+
+```
+# Claude Code
+/clarity explain auth           # agent explains auth module
+/clarity explain auth --quiz    # explain + comprehension check + update map
+
+# Windsurf / others
+@clarity explain auth
+@clarity explain auth --quiz
+```
+
+### `handoff`
+
+Produces `CLARITY_HANDOFF.md` capturing everything the next person needs that
+is not in the code. Works with or without an existing map:
+
+- **With a map:** uses user-verified zones and the full debt history
+- **Without a map:** reads the codebase directly and produces an agent-estimated handoff, clearly marked
+- **`--cold`:** fully autonomous — no user input at all. For when someone is leaving with no time for a map session.
+
+```
+# Claude Code
+/clarity handoff               # generate handoff (with or without map)
+/clarity handoff --cold        # fully autonomous handoff, no user input
+/clarity handoff --import      # you are the new person — agent guides you through it
+/clarity handoff --sync        # after onboarding, update the map
 
 # Windsurf / others
 @clarity handoff
+@clarity handoff --cold
 @clarity handoff --import
 @clarity handoff --sync
 ```
 
+`--import` no longer requires a handoff file. If no handoff or map exists, the
+agent offers to run `review` first and uses that as the onboarding base.
+
 ### `status`
 
-A five-line snapshot of the current knowledge state.
+A concise snapshot of user-verified zones, agent estimates, debt score, and
+last activity dates. Works even when no files exist — recommends a starting action.
 
 ```
 # Claude Code
@@ -262,12 +331,16 @@ static file — commit it, share it, or open it offline.
 ## Files written to your project
 
 ```
-CLARITY_MAP.md       knowledge map — zones, debt log, open questions
-CLARITY_HANDOFF.md   handoff snapshot (generated on request)
-clarity-graph.html   interactive visual map
+CLARITY_MAP.md      user-verified knowledge map — zones, debt log, open questions
+CLARITY_REVIEW.md   agent-estimated risk scan — written by review or handoff --cold
+CLARITY_HANDOFF.md  context transfer document — written by handoff
+clarity-graph.html  interactive visual map — generated by map and debt
 ```
 
-These files are yours. Commit them.
+`CLARITY_MAP.md` and `CLARITY_REVIEW.md` are kept separate on purpose: one records
+what you verified, the other records what the agent estimated. The distinction matters.
+
+All files are yours. Commit them.
 
 ---
 
@@ -279,9 +352,9 @@ memory across sessions: persistent context, structured phases, workflow state.
 `clarity` manages yours: what you understand, what you don't, and how to
 transfer that when someone new joins the project.
 
-They are independent. If you use both, a natural rhythm is: build a phase with
-`learnship`, then run `debt` at the end of the phase. Run `map` before any phase
-where you are entering territory you have not touched in a while.
+They are independent. A natural rhythm with both: build a phase with `learnship`,
+run `debt` at the end, run `map` before any phase where you are entering unfamiliar
+territory, run `review` when onboarding someone new or rejoining after a long break.
 
 `clarity` reads `AGENTS.md` if it exists to avoid duplicating what `learnship`
 already tracks, but does not require it.

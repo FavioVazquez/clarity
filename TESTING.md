@@ -1,8 +1,7 @@
 # Testing Guide
 
-Behavioral verification checklist for all four actions. These tests confirm the
-agent follows the contracts in SKILL.md. They are manual tests — run them by
-invoking the skill in your agent after installation.
+Behavioral verification checklist for all six actions. These are manual tests —
+run them by invoking the skill in your agent after installation.
 
 Each test lists: the invocation, the expected behavior, and what failure looks like.
 
@@ -10,7 +9,7 @@ Each test lists: the invocation, the expected behavior, and what failure looks l
 
 ## Before you start
 
-Install the skill and confirm it loads:
+Install and confirm the skill loads.
 
 **Claude Code:**
 ```
@@ -18,13 +17,13 @@ Install the skill and confirm it loads:
 /plugin install clarity@clarity-marketplace
 /reload-plugins
 ```
-Then type `/clarity` — Claude Code should show it as an available skill.
+Type `/clarity` — Claude Code should show it as an available skill.
 
 **Windsurf:**
 ```bash
 npx skills add FavioVazquez/clarity
 ```
-Then type `@clarity` in the chat — Windsurf should recognize the skill.
+Type `@clarity` — Windsurf should recognize the skill and show the description.
 
 **curl (any agent):**
 ```bash
@@ -33,271 +32,463 @@ curl -fsSL https://raw.githubusercontent.com/FavioVazquez/clarity/main/install.s
 
 ---
 
-## `map` — 5 tests
+## `map` — 6 tests
 
-### T1: Basic invocation
+### T1: Basic invocation — no pre-classification
 
-**Invoke:** `/clarity map` (Claude Code) or `@clarity map` (Windsurf)
+**Invoke:** `/clarity map` or `@clarity map`
 
 **Expected:**
-- Agent scans the codebase and identifies top-level modules or directories
+- Agent scans the codebase and identifies top-level modules
 - For each module, asks "Walk me through what X does" before classifying anything
-- Waits for your answer before moving to the next module
-- Does NOT pre-classify modules or say "I think this is Green" before asking
+- Waits for each answer before moving to the next
+- Does NOT say "I think this is Green" or classify before asking
 
-**Failure:** Agent classifies modules without asking, or batches all questions together.
+**Failure:** Agent pre-classifies, or batches all questions at once.
 
 ---
 
 ### T2: Classification accuracy
 
-**Setup:** For one module, give a complete answer (what + why). For another,
+**Setup:** For one module, give a complete explanation (what + why). For another,
 say "I'm not sure, the agent wrote it."
 
 **Expected:**
-- First module classified Green
-- Second module classified Red
-- `CLARITY_MAP.md` created in the project root with both entries
+- First module: Green
+- Second module: Red
+- `CLARITY_MAP.md` written to the project root with both entries
 
-**Failure:** Both modules get the same zone, or the file is not written.
+**Failure:** Same zone for both, or file not written.
 
 ---
 
-### T3: `--quick` flag
+### T3: Yellow on surface-only answer
 
-**Setup:** Run `map` once to completion. Then run `/clarity map --quick` (or `@clarity map --quick`).
+**Setup:** For one module, explain what it does correctly but when asked why it
+is built that way, say "I'm not sure about the specific decision."
 
 **Expected:**
-- Agent skips all Green modules from the previous run
-- Only asks about modules that are Red, Yellow, or new
+- Module classified Yellow (knew the what, not the why)
+- Not Green (incomplete), not Red (not a total blank)
 
-**Failure:** Agent re-asks about all modules including previously Green ones.
+**Failure:** Agent classifies it Green because the what-answer was correct.
 
 ---
 
-### T4: `--module` flag
+### T4: `--quick` flag
 
-**Invoke:** `/clarity map --module <name>` where `<name>` is one specific module.
+**Setup:** Run `map` once to completion. Then run `map --quick`.
 
 **Expected:**
-- Agent only asks about that one module
-- Updates only that module's entry in `CLARITY_MAP.md`
-- Regenerates `clarity-graph.html`
+- Agent skips all Green modules from the prior run
+- Only re-evaluates Red, Yellow, and new modules
 
-**Failure:** Agent maps multiple modules or does not update the file.
+**Failure:** Agent re-asks about previously Green modules.
 
 ---
 
-### T5: Graph generation
+### T5: `--explain` flag
 
-**After running `map`:**
+**Invoke:** `/clarity map --explain` or `@clarity map --explain`
+
+**Expected:**
+- Before asking Question A for each module, agent gives a 2-3 sentence reading
+  of what it sees in that module
+- Then proceeds to ask Question A ("Walk me through what X does")
+- The pre-read does not replace the question — the user still classifies
+
+**Failure:** Agent skips the pre-read, or pre-reads and then skips the question.
+
+---
+
+### T6: Graph generation
+
+**After any `map` run:**
 
 **Expected:**
 - `clarity-graph.html` exists in the project root
-- Opening it in a browser shows nodes (one per module) colored by zone
-- Clicking a node opens the detail panel with the explanation you gave
+- Opening in a browser shows colored nodes (one per module)
+- Clicking a node shows the detail panel with your explanation
 
-**Failure:** File not created, or graph shows no nodes, or wrong colors.
+**Failure:** File not created, graph is empty, or colors are wrong.
 
 ---
 
-## `debt` — 4 tests
+## `debt` — 6 tests
 
-### T6: Diff-derived questions
+### T7: Diff mode (default)
 
-**Setup:** Make at least one meaningful code change and commit it (`git commit`).
+**Setup:** Make at least one meaningful code change and commit it.
 
 **Invoke:** `/clarity debt` or `@clarity debt`
 
 **Expected:**
-- Agent reads the actual diff (not a generic question)
-- Asks exactly 3 questions: one what, one why, one what-if
+- Agent reads the actual diff, not a generic question
+- Asks 3 questions: one what, one why, one what-if
 - Each question references a real function or line from the diff
 - Waits for each answer before asking the next
 
-**Failure:** Questions are generic ("explain your code"), or all three are asked at once.
+**Failure:** Generic questions, or all three asked at once.
 
 ---
 
-### T7: Scoring honesty
+### T8: Scan mode — no git required
 
-**Setup:** Answer one question fully and correctly. For another, say "I don't know."
+**Setup:** Start in a project with no git initialized, or delete the `.git` folder.
+
+**Invoke:** `/clarity debt --scan` or `@clarity debt --scan`
 
 **Expected:**
-- First answer scores 80-100
-- "I don't know" scores 0-19
-- Session Comprehension Score (average) reflects the honest split
-- Score logged to `CLARITY_MAP.md` under `## Cognitive Debt Log`
+- Agent does NOT try to run git
+- Instead reads the codebase and identifies the most complex areas
+- Asks 3 questions about actual code from those areas
 
-**Failure:** "I don't know" scores higher than 20, or log not written.
+**Failure:** Agent fails because no git, or asks generic questions not derived from code.
 
 ---
 
-### T8: Alert threshold
+### T9: Session mode
 
-**Setup:** Answer all three questions with vague or incorrect responses (aim for score < 70).
+**Invoke:** `/clarity debt --session` or `@clarity debt --session`
+
+**Expected:**
+- Agent asks you to describe what was built or changed in this session
+- Uses your description to form 3 targeted questions about real code
+- Does not run git diff
+
+**Failure:** Agent runs a diff anyway, or asks generic questions ignoring your description.
+
+---
+
+### T10: Scoring honesty
+
+**Setup:** Answer one question fully. For another, say "I don't know."
+
+**Expected:**
+- Full answer: 80-100
+- "I don't know": 0-19
+- Session score (average) reflects the split
+- Score logged to `CLARITY_MAP.md` under `## Cognitive Debt Log` with mode noted
+
+**Failure:** "I don't know" scores above 20, or log not written.
+
+---
+
+### T11: Alert threshold
+
+**Setup:** Answer all three questions vaguely (target score < 70).
 
 **Expected:**
 - Agent states the session score
-- Flags it as ALERT since it's below the default threshold of 70
-- Recommends a specific `map` action on the weakest module
+- Flags ALERT (below threshold 70)
+- Recommends a specific `map --module` on the weakest area
 
-**Failure:** Agent says "good job" or does not flag the low score.
+**Failure:** No alert flagged, or generic "review the code" recommendation.
 
 ---
 
-### T9: `--history` flag
+### T12: `--history` flag
 
 **Setup:** Run `debt` at least once so the log has an entry.
 
 **Invoke:** `/clarity debt --history` or `@clarity debt --history`
 
 **Expected:**
-- Agent reads and displays the full debt log from `CLARITY_MAP.md`
+- Shows the full debt log from `CLARITY_MAP.md`
 - Does NOT ask new questions
-- Shows the running average over the last 5 sessions
+- Shows the 5-session running average
 
-**Failure:** Agent runs a new evaluation instead of showing history.
+**Failure:** Runs a new evaluation instead of showing history.
 
 ---
 
-## `handoff` — 4 tests
+## `review` — 4 tests
 
-### T10: Export (default)
+### T13: Basic autonomous scan
+
+**Invoke:** `/clarity review` or `@clarity review`
+
+**Expected:**
+- Agent reads the codebase without asking any questions
+- Produces a module table with agent-estimated zones (Green/Yellow/Red)
+- All zones are marked `(agent estimate)`
+- Writes `CLARITY_REVIEW.md` to the project root
+- Does NOT write to `CLARITY_MAP.md`
+- Tells the user how to promote estimates: `map --module <name>`
+
+**Failure:** Agent asks questions, or writes to `CLARITY_MAP.md`, or produces no file.
+
+---
+
+### T14: Risk signals present in output
+
+**Setup:** Use a codebase with at least one complex or multi-concern module.
+
+**Expected:**
+- `CLARITY_REVIEW.md` contains a risk signal for the complex module
+  (complexity, coupling, opacity, or AI-generation pattern)
+- Red-estimated modules have a named primary risk signal, not just "risky"
+
+**Failure:** All modules estimated Green regardless of actual complexity, or
+risk signals are generic.
+
+---
+
+### T15: `--deep` flag
+
+**Setup:** Run `review` on a codebase where at least one module is estimated Red.
+
+**Invoke:** `/clarity review --deep` or `@clarity review --deep`
+
+**Expected:**
+- For each Red-estimated module, `CLARITY_REVIEW.md` includes a 3-5 sentence
+  plain-language description of what the module appears to do and what the primary risk is
+
+**Failure:** No additional descriptions for Red modules, or descriptions are
+one-liners.
+
+---
+
+### T16: Anchors to existing map
+
+**Setup:** Run `map` first so `CLARITY_MAP.md` exists. Then run `review`.
+
+**Expected:**
+- Agent reads `CLARITY_MAP.md` before scanning
+- Does not re-estimate modules already marked Green in the map as Red
+- May still flag them for staleness if last evaluated > 14 days ago
+
+**Failure:** Agent ignores the map and produces estimates that contradict
+user-verified zones without noting the conflict.
+
+---
+
+## `explain` — 4 tests
+
+### T17: Basic explanation
+
+**Invoke:** `/clarity explain <module>` or `@clarity explain <module>`
+
+**Expected:**
+- Agent reads the module and gives a layered explanation in plain language
+- Starts with purpose, explains mechanism, names the non-obvious part, names the gotcha
+- Pauses after each layer: "Does that make sense?"
+- Waits for user questions before continuing
+
+**Failure:** Agent dumps the whole explanation at once without pausing, or
+gives a one-line summary.
+
+---
+
+### T18: Stays focused on the module
+
+**Setup:** During `explain`, ask about something in a different module.
+
+**Expected:**
+- Agent briefly acknowledges the other module
+- Notes it can be covered with `explain <other-module>`
+- Stays focused on the current module
+
+**Failure:** Agent goes off on a tangent and loses the thread of the current module.
+
+---
+
+### T19: `--quiz` flag updates map
+
+**Invoke:** `/clarity explain <module> --quiz`
+
+**Expected:**
+- After explanation, agent asks 3 comprehension questions (what, why, what-if)
+  about this specific module
+- Scores answers
+- If average >= 70: marks module Green in `CLARITY_MAP.md` (creates file if needed)
+- If average < 70: marks module Yellow and notes which question revealed the gap
+- Reports the score and what was recorded
+
+**Failure:** No questions asked after explanation, or map not updated.
+
+---
+
+### T20: Without `--quiz` — no map change
+
+**Invoke:** `/clarity explain <module>` (no quiz flag)
+
+**Expected:**
+- Agent does NOT update `CLARITY_MAP.md`
+- At the end, suggests running `map --module <name>` to record comprehension formally
+
+**Failure:** Agent updates the map without the user being quizzed, or does not
+suggest the next step.
+
+---
+
+## `handoff` — 6 tests
+
+### T21: Export with map
 
 **Setup:** Run `map` first so `CLARITY_MAP.md` exists with at least one Red module.
 
 **Invoke:** `/clarity handoff` or `@clarity handoff`
 
 **Expected:**
-- `CLARITY_HANDOFF.md` created in the project root
+- `CLARITY_HANDOFF.md` written to project root
 - Red zones listed with the user's own words from the map session
-- Section "What to do first" with 2-3 concrete recommendations
-- File does not duplicate what is already in `AGENTS.md`
+- "What to do first" section with 2-3 concrete recommendations including `clarity` commands
+- Source noted as "user-verified map"
 
-**Failure:** File not created, or Red zones are empty, or generic "review the code" recommendations.
-
----
-
-### T11: `--import` mode
-
-**Setup:** `CLARITY_HANDOFF.md` must exist from a previous export.
-
-**Invoke:** `/clarity handoff --import` or `@clarity handoff --import`
-
-**Expected:**
-- Agent presents Red zones one by one and explains each
-- Asks "Does that make sense?" after each one before continuing
-- Presents open questions from the handoff
-- At the end, runs a debt evaluation to establish a baseline score
-
-**Failure:** Agent dumps the whole handoff file without guiding through it.
+**Failure:** File not written, Red zones empty, or generic recommendations.
 
 ---
 
-### T12: Missing map guard
+### T22: Export without map (agent-estimated)
 
-**Setup:** Delete `CLARITY_MAP.md` (or start in a fresh project with no map).
+**Setup:** Delete `CLARITY_MAP.md` or use a fresh project with no map.
 
 **Invoke:** `/clarity handoff` or `@clarity handoff`
 
 **Expected:**
-- Agent stops and tells the user to run `map` first
-- Does NOT generate a blank or empty `CLARITY_HANDOFF.md`
+- Agent reads the codebase directly
+- `CLARITY_HANDOFF.md` written with all zone assessments marked `(agent estimate)`
+- Top of the handoff states that no map session exists and recommends running `map`
+- Does NOT stop or refuse
 
-**Failure:** Agent creates an empty handoff, or proceeds without the map.
+**Failure:** Agent stops and says "run map first," or writes a blank file.
 
 ---
 
-### T13: `--sync` after onboarding
+### T23: `--cold` flag — fully autonomous
 
-**Setup:** Run `handoff --import`, complete the onboarding. Then run `--sync`.
+**Invoke:** `/clarity handoff --cold` or `@clarity handoff --cold`
 
 **Expected:**
-- Agent re-evaluates any modules that changed in comprehension during onboarding
-- Updates `CLARITY_MAP.md` with new zones where they changed
+- Agent reads the codebase with no user input
+- Writes a complete `CLARITY_HANDOFF.md` using the same signals as `review`
+- All zones marked as agent-estimated
+- Does not ask the user any questions
+
+**Failure:** Agent asks questions, or requires a map file.
+
+---
+
+### T24: `--import` with handoff file
+
+**Setup:** `CLARITY_HANDOFF.md` exists from a prior export.
+
+**Invoke:** `/clarity handoff --import` or `@clarity handoff --import`
+
+**Expected:**
+- Agent presents Red zones first, explains each from the codebase
+- Asks "Does that make sense?" after each before continuing
+- Presents Yellow zones with lighter treatment
+- Presents open questions
+- At the end, offers to run `debt --scan` for a baseline score
+
+**Failure:** Agent dumps the handoff file as-is without guiding through it.
+
+---
+
+### T25: `--import` with no files
+
+**Setup:** Fresh project, no `CLARITY_HANDOFF.md`, no `CLARITY_MAP.md`.
+
+**Invoke:** `/clarity handoff --import` or `@clarity handoff --import`
+
+**Expected:**
+- Agent does NOT stop
+- Offers to run `review` first to produce a structural overview
+- Uses the review as the onboarding base
+
+**Failure:** Agent stops and says a handoff or map is required.
+
+---
+
+### T26: `--sync` after onboarding
+
+**Setup:** Complete a `handoff --import` session. Then run `--sync`.
+
+**Expected:**
+- Agent re-evaluates modules that changed in comprehension during onboarding
+- Updates `CLARITY_MAP.md` (creates if needed)
 - Regenerates `clarity-graph.html`
 
-**Failure:** No changes made to the map even after the onboarding revealed new understandings.
+**Failure:** No changes made even after the onboarding revealed new understandings.
 
 ---
 
-## `status` — 2 tests
+## `status` — 3 tests
 
-### T14: Normal output
+### T27: Full output with all files
 
-**Setup:** Run `map` and `debt` at least once.
+**Setup:** Run `map`, `debt`, `review`, and `handoff` at least once.
 
 **Invoke:** `/clarity status` or `@clarity status`
 
-**Expected output format:**
-```
-CLARITY STATUS — <project name>
-Last evaluated: <date>
+**Expected output includes:**
+- User-verified zones from `CLARITY_MAP.md` (counts per zone, names of Red modules)
+- Agent-estimated zones from `CLARITY_REVIEW.md` (count only)
+- Debt: last session score with mode, 5-session average, sessions below threshold
+- Last handoff date and last review date
+- One concrete recommended next step
 
-Knowledge zones:
-  Green  (understood):  N modules
-  Yellow (partial):     N modules
-  Red    (risk):        N modules — <names>
-
-Cognitive debt:
-  Last session score:      N/100
-  5-session average:       N/100
-  Sessions below threshold: N
-
-Last handoff: <date or "never">
-
-Recommended action: <specific next step>
-```
-
-**Failure:** Status is vague, does not show zone counts, or guesses at unevaluated modules.
+**Failure:** Missing section, guesses at unevaluated modules, or no recommendation.
 
 ---
 
-### T15: Missing map guard
+### T28: Works with no files
 
-**Setup:** No `CLARITY_MAP.md` in the project.
+**Setup:** Fresh project, no clarity files.
 
 **Invoke:** `/clarity status` or `@clarity status`
 
 **Expected:**
-- Agent says the map does not exist and tells the user to run `map` first
-- Does NOT fabricate a status based on reading the codebase
+- Agent states no map, review, or handoff exists
+- Recommends a starting action (`review` for a quick read, `map` for formal evaluation)
+- Does NOT invent zones or scores
 
-**Failure:** Agent invents zones without having asked the user anything.
+**Failure:** Agent fabricates a status or refuses to respond.
+
+---
+
+### T29: Stale map warning
+
+**Setup:** Modify `CLARITY_MAP.md` manually to set the last evaluation date to
+more than 14 days ago, and ensure at least one Red module exists.
+
+**Invoke:** `/clarity status` or `@clarity status`
+
+**Expected:**
+- Agent notes that the map may be stale
+- Recommends running `map --quick` to refresh
+
+**Failure:** No staleness warning even with Red zones and an old evaluation date.
 
 ---
 
 ## Platform-specific checks
 
-### Claude Code invocation
+### Claude Code
 
-After installing via the marketplace:
-- `/clarity map` should trigger the skill (slash prefix)
-- `/clarity` with no action should show available actions
-- The skill name in `SKILL.md` frontmatter (`name: clarity`) maps directly to `/clarity`
+After marketplace install:
+- `/clarity map` triggers the skill
+- `/clarity` with no action shows available actions
+- `SKILL.md` `name: clarity` maps to `/clarity` automatically
 
-### Windsurf invocation
+### Windsurf
 
-After installing via `npx skills add`:
-- `@clarity map` should trigger the skill (at-mention prefix)
-- The skill appears in the Windsurf skills panel
-- `.agents/skills/clarity/SKILL.md` should exist in the workspace
+After `npx skills add`:
+- `@clarity map` triggers the skill
+- `.windsurf/skills/clarity/SKILL.md` exists (symlinked or copied)
 
 ### Workspace vs global scope
 
-**Workspace install** (default): skill only available in the current project.
 ```bash
-# Confirm install location
+# Workspace install (default)
 ls .agents/skills/clarity/SKILL.md
-```
 
-**Global install**: skill available in all projects.
-```bash
-# Claude Code global
+# Global — Claude Code
 ls ~/.claude/skills/clarity/SKILL.md
 
-# Windsurf global
+# Global — Windsurf
 ls ~/.codeium/windsurf/skills/clarity/SKILL.md
 ```
 
@@ -305,10 +496,8 @@ ls ~/.codeium/windsurf/skills/clarity/SKILL.md
 
 ## Reporting issues
 
-If a test fails, open an issue at
-[github.com/FavioVazquez/clarity/issues](https://github.com/FavioVazquez/clarity/issues)
-with:
-- Which test number failed
-- Which agent and version
-- The exact invocation used
-- What the agent produced instead of the expected behavior
+Open an issue at [github.com/FavioVazquez/clarity/issues](https://github.com/FavioVazquez/clarity/issues) with:
+- Test number and name
+- Agent and version
+- Exact invocation
+- What the agent produced vs what was expected
