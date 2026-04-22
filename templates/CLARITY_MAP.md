@@ -37,7 +37,7 @@ The three zones reflect your ability to explain the module, not its code quality
 
 ## Cognitive Debt Log
 
-Scores logged by `clarity debt`. Each row is one session.
+Scores logged by `clarity debt` (`/clarity debt` on Claude Code, `@clarity debt` on Windsurf). Each row is one session.
 
 | Date | Score | Mode | Alert | Notes |
 |------|-------|------|-------|-------|
@@ -50,7 +50,7 @@ Scores logged by `clarity debt`. Each row is one session.
 ## Open Questions
 
 Things captured during map or debt sessions that remain unresolved.
-Review these before running `clarity handoff`.
+Review these before running `/clarity handoff` (Claude Code) or `@clarity handoff` (Windsurf).
 
 - [ ] {{OPEN_QUESTION}}
 
