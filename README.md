@@ -185,9 +185,11 @@ Installs to the current workspace. Also available at
 
 ### Option 2 — Claude Code plugin marketplace
 
+First add the marketplace, then install the plugin:
+
 ```
 /plugin marketplace add FavioVazquez/clarity
-/plugin install clarity
+/plugin install clarity@clarity-marketplace
 ```
 
 ### Option 3 — `curl` one-liner

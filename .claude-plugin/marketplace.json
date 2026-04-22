@@ -1,0 +1,21 @@
+{
+  "name": "clarity-marketplace",
+  "owner": {
+    "name": "Favio Vazquez",
+    "email": "favio.vazquezp@gmail.com"
+  },
+  "metadata": {
+    "description": "clarity — knowledge mapping and cognitive debt tracking for projects built with AI agents"
+  },
+  "plugins": [
+    {
+      "name": "clarity",
+      "source": {
+        "source": "github",
+        "repo": "FavioVazquez/clarity"
+      },
+      "description": "Map what you understand about your codebase, measure cognitive debt from AI-assisted sessions, and generate handoffs that capture comprehension gaps. Works with Claude Code, Windsurf, Cursor, and any AgentSkills-compatible agent.",
+      "version": "1.0.0"
+    }
+  ]
+}
