@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clarity Map</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d1117;
+      --surface:     #161b22;
+      --surface-2:   #21262d;
+      --border:      #30363d;
+      --text:        #e6edf3;
+      --text-muted:  #8b949e;
+      --green:       #3fb950;
+      --green-dim:   #1a4228;
+      --yellow:      #d29922;
+      --yellow-dim:  #341f00;
+      --red:         #f85149;
+      --red-dim:     #3d1010;
+      --orange:      #f0883e;
+      --accent:      #58a6ff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 48px 1fr 180px;
+      grid-template-columns: 1fr 320px;
+      grid-template-areas:
+        "header header"
+        "graph  panel"
+        "timeline timeline";
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      grid-area: header;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    header .meta {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .filters {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .filter-btn.active { background: rgba(88, 166, 255, 0.1); }
+
+    /* Graph area */
+    #graph {
+      grid-area: graph;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    #graph svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Tooltip */
+    #tooltip {
+      position: absolute;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      max-width: 220px;
+      z-index: 10;
+    }
+
+    #tooltip .tt-name { font-weight: 600; margin-bottom: 4px; }
+    #tooltip .tt-zone { font-size: 11px; }
+    #tooltip .tt-date { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+
+    /* Detail panel */
+    #panel {
+      grid-area: panel;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    #panel.empty .panel-content { display: none; }
+    #panel.empty .panel-empty { display: flex; }
+
+    .panel-empty {
+      display: none;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-empty svg { opacity: 0.3; }
+
+    .panel-content { display: block; }
+
+    .panel-module-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .zone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .zone-badge.green { background: var(--green-dim); color: var(--green); }
+    .zone-badge.yellow { background: var(--yellow-dim); color: var(--yellow); }
+    .zone-badge.red { background: var(--red-dim); color: var(--red); }
+
+    .panel-section {
+      margin-bottom: 14px;
+    }
+
+    .panel-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .panel-value {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .panel-value.empty-val { color: var(--text-muted); font-style: italic; }
+
+    .score-bar-wrap {
+      margin-top: 4px;
+    }
+
+    .score-bar {
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .score-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .score-fill.good  { background: var(--green); }
+    .score-fill.warn  { background: var(--yellow); }
+    .score-fill.alert { background: var(--red); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 14px 0;
+    }
+
+    /* Timeline */
+    #timeline {
+      grid-area: timeline;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      overflow-x: auto;
+    }
+
+    #timeline h2 {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    #timeline-svg {
+      width: 100%;
+      height: 120px;
+    }
+
+    /* Nodes and edges */
+    .node circle {
+      stroke-width: 2px;
+      cursor: pointer;
+      transition: filter 0.15s;
+    }
+
+    .node circle:hover { filter: brightness(1.25); }
+    .node.selected circle { stroke-width: 3px; filter: brightness(1.3); }
+    .node.faded circle { opacity: 0.3; }
+    .node.faded text { opacity: 0.3; }
+
+    .node text {
+      fill: var(--text);
+      font-size: 11px;
+      pointer-events: none;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .link {
+      stroke: var(--border);
+      stroke-width: 1.5px;
+      fill: none;
+      opacity: 0.6;
+    }
+
+    .link.risk { stroke: var(--orange); opacity: 0.8; }
+    .link.faded { opacity: 0.1; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1 id="project-title">Clarity Map</h1>
+  <span class="meta" id="header-meta"></span>
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="red">Risk zones</button>
+    <button class="filter-btn" data-filter="stale">Stale</button>
+    <button class="filter-btn" data-filter="risk-edges">Risk edges</button>
+  </div>
+</header>
+
+<div id="graph">
+  <svg id="main-svg"></svg>
+  <div id="tooltip">
+    <div class="tt-name"></div>
+    <div class="tt-zone"></div>
+    <div class="tt-date"></div>
+  </div>
+</div>
+
+<div id="panel" class="empty">
+  <div class="panel-empty">
+    <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm.5 4.75a.75.75 0 0 0-1.5 0v3.5a.75.75 0 0 0 .75.75h2.5a.75.75 0 0 0 0-1.5H8.5v-2.75z"/>
+    </svg>
+    <span>Click a node to see details</span>
+  </div>
+  <div class="panel-content">
+    <div class="panel-module-name" id="p-name"></div>
+    <div class="zone-badge" id="p-zone-badge"></div>
+    <div class="panel-section">
+      <div class="panel-label">What you said it does</div>
+      <div class="panel-value" id="p-what"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-label">Key decision</div>
+      <div class="panel-value" id="p-why"></div>
+    </div>
+    <hr class="divider" />
+    <div class="panel-section">
+      <div class="panel-label">Last Comprehension Score</div>
+      <div class="score-bar-wrap" id="p-score-wrap">
+        <div id="p-score-label" class="panel-value"></div>
+        <div class="score-bar"><div class="score-fill" id="p-score-fill"></div></div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-label">Last evaluated</div>
+      <div class="panel-value" id="p-date"></div>
+    </div>
+    <hr class="divider" />
+    <div class="panel-section">
+      <div class="panel-label">Dependencies</div>
+      <div class="panel-value" id="p-deps"></div>
+    </div>
+  </div>
+</div>
+
+<div id="timeline">
+  <h2>Comprehension Score History</h2>
+  <svg id="timeline-svg"></svg>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+// This block is replaced by the agent when running @clarity map or @clarity debt.
+// Each module: { id, label, zone, lines, last_evaluated, what, why, dependencies }
+// debt_log: [{ date, score, note }]
+
+const CLARITY_DATA = {
+  project: "PROJECT_NAME",
+  generated: "GENERATED_DATE",
+  threshold: 70,
+  modules: [],
+  debt_log: []
+};
+// Agent: replace the CLARITY_DATA object above with real project data when running @clarity map or @clarity debt.
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const ZONE_COLOR = { green: "#3fb950", yellow: "#d29922", red: "#f85149" };
+const ZONE_LABEL = { green: "Understood", yellow: "Partial", red: "Risk zone" };
+const STALE_DAYS = 14;
+
+function daysSince(iso) {
+  if (!iso) return Infinity;
+  return (Date.now() - new Date(iso).getTime()) / 86400000;
+}
+
+function isStale(m) {
+  return daysSince(m.last_evaluated) > STALE_DAYS;
+}
+
+function nodeFill(m) {
+  const base = ZONE_COLOR[m.zone] || "#8b949e";
+  if (isStale(m)) {
+    // darken stale nodes
+    return d3.color(base).darker(1.4).formatHex();
+  }
+  return base;
+}
+
+function nodeRadius(m) {
+  const base = Math.sqrt((m.lines || 50) / 3);
+  return Math.max(14, Math.min(36, base));
+}
+
+// ─── SETUP ───────────────────────────────────────────────────────────────────
+document.getElementById("project-title").textContent =
+  "Clarity Map — " + CLARITY_DATA.project;
+
+const meta = document.getElementById("header-meta");
+const reds = CLARITY_DATA.modules.filter(m => m.zone === "red").length;
+const yellows = CLARITY_DATA.modules.filter(m => m.zone === "yellow").length;
+meta.textContent =
+  CLARITY_DATA.modules.length + " modules  •  " +
+  reds + " risk  •  " + yellows + " partial  •  " +
+  "generated " + CLARITY_DATA.generated;
+
+// ─── BUILD GRAPH DATA ─────────────────────────────────────────────────────────
+const nodes = CLARITY_DATA.modules.map(m => ({ ...m }));
+const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+const links = [];
+for (const m of CLARITY_DATA.modules) {
+  for (const dep of (m.dependencies || [])) {
+    if (nodeById[dep]) {
+      links.push({ source: m.id, target: dep, isRisk: m.zone === "red" || nodeById[dep].zone === "red" });
+    }
+  }
+}
+
+// ─── SVG SETUP ───────────────────────────────────────────────────────────────
+const svg = d3.select("#main-svg");
+const graphEl = document.getElementById("graph");
+
+function graphSize() {
+  return { w: graphEl.clientWidth, h: graphEl.clientHeight };
+}
+
+let { w, h } = graphSize();
+
+const g = svg.append("g");
+
+// Zoom
+const zoom = d3.zoom()
+  .scaleExtent([0.3, 3])
+  .on("zoom", e => g.attr("transform", e.transform));
+svg.call(zoom);
+
+// ─── FORCE SIMULATION ────────────────────────────────────────────────────────
+const sim = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(d => 90 + nodeRadius(nodeById[d.source.id || d.source]) + nodeRadius(nodeById[d.target.id || d.target])))
+  .force("charge", d3.forceManyBody().strength(-280))
+  .force("center", d3.forceCenter(w / 2, h / 2))
+  .force("collision", d3.forceCollide().radius(d => nodeRadius(d) + 10));
+
+// ─── DRAW EDGES ──────────────────────────────────────────────────────────────
+const linkSel = g.append("g").attr("class", "links")
+  .selectAll("line")
+  .data(links)
+  .join("line")
+  .attr("class", d => "link" + (d.isRisk ? " risk" : ""));
+
+// ─── DRAW NODES ──────────────────────────────────────────────────────────────
+const nodeSel = g.append("g").attr("class", "nodes")
+  .selectAll("g.node")
+  .data(nodes)
+  .join("g")
+  .attr("class", "node")
+  .call(d3.drag()
+    .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+    .on("drag",  (e, d) => { d.fx = e.x; d.fy = e.y; })
+    .on("end",   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+  )
+  .on("click", onNodeClick)
+  .on("mouseenter", onNodeHover)
+  .on("mouseleave", hideTooltip);
+
+nodeSel.append("circle")
+  .attr("r", d => nodeRadius(d))
+  .attr("fill", d => nodeFill(d))
+  .attr("stroke", d => d3.color(nodeFill(d)).brighter(0.5).formatHex());
+
+nodeSel.append("text")
+  .text(d => d.label.length > 12 ? d.label.slice(0, 11) + "…" : d.label)
+  .attr("dy", "0.35em");
+
+// ─── TICK ────────────────────────────────────────────────────────────────────
+sim.on("tick", () => {
+  linkSel
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
+
+  nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+// ─── RESIZE ──────────────────────────────────────────────────────────────────
+new ResizeObserver(() => {
+  ({ w, h } = graphSize());
+  sim.force("center", d3.forceCenter(w / 2, h / 2)).alpha(0.1).restart();
+}).observe(graphEl);
+
+// ─── TOOLTIP ─────────────────────────────────────────────────────────────────
+const tooltip = document.getElementById("tooltip");
+
+function onNodeHover(event, d) {
+  tooltip.querySelector(".tt-name").textContent = d.label;
+  tooltip.querySelector(".tt-zone").textContent = ZONE_LABEL[d.zone] || d.zone;
+  tooltip.querySelector(".tt-zone").style.color = ZONE_COLOR[d.zone] || "inherit";
+  const days = daysSince(d.last_evaluated);
+  tooltip.querySelector(".tt-date").textContent =
+    d.last_evaluated
+      ? "Evaluated " + (days < 1 ? "today" : Math.floor(days) + "d ago") + (isStale(d) ? " — stale" : "")
+      : "Not yet evaluated";
+  tooltip.style.opacity = 1;
+  tooltip.style.left = (event.offsetX + 14) + "px";
+  tooltip.style.top = (event.offsetY - 10) + "px";
+}
+
+function hideTooltip() {
+  tooltip.style.opacity = 0;
+}
+
+// ─── DETAIL PANEL ────────────────────────────────────────────────────────────
+let selectedId = null;
+
+function onNodeClick(event, d) {
+  event.stopPropagation();
+
+  if (selectedId === d.id) {
+    selectedId = null;
+    nodeSel.classed("selected", false).classed("faded", false);
+    linkSel.classed("faded", false);
+    document.getElementById("panel").classList.add("empty");
+    return;
+  }
+
+  selectedId = d.id;
+
+  // Highlight selected + connected
+  const connected = new Set([d.id]);
+  links.forEach(l => {
+    const sid = l.source.id || l.source;
+    const tid = l.target.id || l.target;
+    if (sid === d.id) connected.add(tid);
+    if (tid === d.id) connected.add(sid);
+  });
+
+  nodeSel
+    .classed("selected", n => n.id === d.id)
+    .classed("faded", n => !connected.has(n.id));
+
+  linkSel.classed("faded", l => {
+    const sid = l.source.id || l.source;
+    const tid = l.target.id || l.target;
+    return sid !== d.id && tid !== d.id;
+  });
+
+  // Fill panel
+  document.getElementById("panel").classList.remove("empty");
+  document.getElementById("p-name").textContent = d.label;
+
+  const badge = document.getElementById("p-zone-badge");
+  badge.textContent = ZONE_LABEL[d.zone] || d.zone;
+  badge.className = "zone-badge " + (d.zone || "");
+
+  const pWhat = document.getElementById("p-what");
+  pWhat.textContent = d.what || "Not recorded";
+  pWhat.className = "panel-value" + (d.what ? "" : " empty-val");
+
+  const pWhy = document.getElementById("p-why");
+  pWhy.textContent = d.why || "Not recorded";
+  pWhy.className = "panel-value" + (d.why ? "" : " empty-val");
+
+  // Score from debt log — last entry that mentions this module, or last overall
+  const lastDebt = [...CLARITY_DATA.debt_log].reverse().find(e => e.module === d.id || !e.module);
+  const scoreVal = lastDebt ? lastDebt.score : null;
+  const pScoreLabel = document.getElementById("p-score-label");
+  const pScoreFill = document.getElementById("p-score-fill");
+  if (scoreVal !== null) {
+    pScoreLabel.textContent = scoreVal + "/100";
+    pScoreFill.style.width = scoreVal + "%";
+    pScoreFill.className = "score-fill " + (scoreVal >= 70 ? "good" : scoreVal >= 50 ? "warn" : "alert");
+  } else {
+    pScoreLabel.textContent = "No debt session yet";
+    pScoreFill.style.width = "0%";
+  }
+
+  const days = daysSince(d.last_evaluated);
+  document.getElementById("p-date").textContent =
+    d.last_evaluated
+      ? d.last_evaluated + (isStale(d) ? "  (stale — over " + STALE_DAYS + " days)" : "")
+      : "Never evaluated";
+
+  const deps = (d.dependencies || []).map(dep => nodeById[dep] ? nodeById[dep].label : dep);
+  const pDeps = document.getElementById("p-deps");
+  pDeps.textContent = deps.length ? deps.join(", ") : "None";
+  pDeps.className = "panel-value" + (deps.length ? "" : " empty-val");
+}
+
+// Click outside to deselect
+svg.on("click", () => {
+  if (selectedId) {
+    selectedId = null;
+    nodeSel.classed("selected", false).classed("faded", false);
+    linkSel.classed("faded", false);
+    document.getElementById("panel").classList.add("empty");
+  }
+});
+
+// ─── FILTERS ─────────────────────────────────────────────────────────────────
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const f = btn.dataset.filter;
+
+    if (f === "all") {
+      nodeSel.classed("faded", false);
+      linkSel.classed("faded", false);
+    } else if (f === "red") {
+      nodeSel.classed("faded", d => d.zone !== "red");
+      linkSel.classed("faded", l => {
+        const sid = l.source.id || l.source;
+        const tid = l.target.id || l.target;
+        return (nodeById[sid]?.zone !== "red") && (nodeById[tid]?.zone !== "red");
+      });
+    } else if (f === "stale") {
+      nodeSel.classed("faded", d => !isStale(d));
+      linkSel.classed("faded", true);
+    } else if (f === "risk-edges") {
+      nodeSel.classed("faded", false);
+      linkSel.classed("faded", l => !l.isRisk);
+    }
+  });
+});
+
+// ─── TIMELINE ────────────────────────────────────────────────────────────────
+(function drawTimeline() {
+  const data = CLARITY_DATA.debt_log;
+  if (!data || data.length === 0) {
+    d3.select("#timeline-svg").append("text")
+      .attr("x", 16).attr("y", 50)
+      .attr("fill", "#8b949e")
+      .attr("font-size", "12")
+      .text("No debt sessions recorded yet. Run @clarity debt to start tracking.");
+    return;
+  }
+
+  const tsvg = d3.select("#timeline-svg");
+  const margin = { top: 10, right: 20, bottom: 30, left: 40 };
+  const tw = document.getElementById("timeline").clientWidth - margin.left - margin.right;
+  const th = 120 - margin.top - margin.bottom;
+
+  const tg = tsvg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const parseDate = d3.timeParse("%Y-%m-%d");
+  const parsed = data.map(d => ({ ...d, dateObj: parseDate(d.date) || new Date(d.date) }))
+                      .filter(d => d.dateObj);
+
+  const x = d3.scaleTime().domain(d3.extent(parsed, d => d.dateObj)).range([0, tw]);
+  const y = d3.scaleLinear().domain([0, 100]).range([th, 0]);
+
+  // Threshold line
+  const thresh = CLARITY_DATA.threshold || 70;
+  tg.append("line")
+    .attr("x1", 0).attr("x2", tw)
+    .attr("y1", y(thresh)).attr("y2", y(thresh))
+    .attr("stroke", "#f85149").attr("stroke-dasharray", "4,3").attr("stroke-width", 1).attr("opacity", 0.5);
+
+  tg.append("text")
+    .attr("x", tw + 2).attr("y", y(thresh) + 4)
+    .attr("fill", "#f85149").attr("font-size", "10")
+    .text(thresh);
+
+  // Area
+  const area = d3.area()
+    .x(d => x(d.dateObj))
+    .y0(th)
+    .y1(d => y(d.score))
+    .curve(d3.curveMonotoneX);
+
+  tg.append("path")
+    .datum(parsed)
+    .attr("fill", "rgba(88,166,255,0.08)")
+    .attr("d", area);
+
+  // Line
+  const line = d3.line()
+    .x(d => x(d.dateObj))
+    .y(d => y(d.score))
+    .curve(d3.curveMonotoneX);
+
+  tg.append("path")
+    .datum(parsed)
+    .attr("fill", "none")
+    .attr("stroke", "#58a6ff")
+    .attr("stroke-width", 2)
+    .attr("d", line);
+
+  // Points
+  tg.selectAll("circle.debt-pt")
+    .data(parsed)
+    .join("circle")
+    .attr("class", "debt-pt")
+    .attr("cx", d => x(d.dateObj))
+    .attr("cy", d => y(d.score))
+    .attr("r", 4)
+    .attr("fill", d => d.score >= thresh ? "#3fb950" : d.score >= 50 ? "#d29922" : "#f85149")
+    .attr("stroke", "#0d1117")
+    .attr("stroke-width", 1.5);
+
+  // X axis
+  tg.append("g")
+    .attr("transform", `translate(0,${th})`)
+    .call(d3.axisBottom(x).ticks(Math.min(parsed.length, 6)).tickFormat(d3.timeFormat("%b %d")))
+    .call(g => g.select(".domain").remove())
+    .call(g => g.selectAll("text").attr("fill", "#8b949e").attr("font-size", "10"))
+    .call(g => g.selectAll(".tick line").attr("stroke", "#30363d"));
+
+  // Y axis
+  tg.append("g")
+    .call(d3.axisLeft(y).ticks(4))
+    .call(g => g.select(".domain").remove())
+    .call(g => g.selectAll("text").attr("fill", "#8b949e").attr("font-size", "10"))
+    .call(g => g.selectAll(".tick line").attr("stroke", "#30363d"));
+})();
+</script>
+</body>
+</html>

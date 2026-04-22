@@ -1,0 +1,24 @@
+{
+  "name": "clarity",
+  "description": "A knowledge mapping skill for projects built with AI agents. Maps what you understand about your own codebase, measures cognitive debt from build sessions, and generates handoffs that capture comprehension gaps. Works with Claude Code, Windsurf, Cursor, and any AgentSkills-compatible agent.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Favio Vazquez",
+    "email": "favio.vazquezp@gmail.com"
+  },
+  "homepage": "https://github.com/FavioVazquez/clarity",
+  "repository": "https://github.com/FavioVazquez/clarity",
+  "license": "MIT",
+  "keywords": [
+    "knowledge-map",
+    "cognitive-debt",
+    "handoff",
+    "agentic",
+    "ai-agent",
+    "claude-code",
+    "windsurf",
+    "cursor",
+    "comprehension"
+  ],
+  "skills": "."
+}
