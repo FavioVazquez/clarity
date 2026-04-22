@@ -12,7 +12,7 @@ license: MIT
 compatibility: Works with any AgentSkills-compatible agent — Claude Code, Windsurf, Cursor, GitHub Copilot, Gemini CLI, Amp, Warp, Cline, Codex, and more.
 metadata:
   author: favio-vazquez
-  version: "1.1.1"
+  version: "1.1.2"
 ---
 
 # clarity
@@ -47,13 +47,13 @@ and [references/feynman-technique.md](references/feynman-technique.md).
 # Claude Code
 /clarity map
 /clarity map --quick
-/clarity map --module <name>
+/clarity map --module <module>
 /clarity map --explain
 
 # Windsurf, Cursor, and others
 @clarity map
 @clarity map --quick
-@clarity map --module <name>
+@clarity map --module <module>
 @clarity map --explain
 ```
 
@@ -113,7 +113,7 @@ and [references/feynman-technique.md](references/feynman-technique.md).
 
 **Flags:**
 - `--quick`: Re-evaluate only modules that are new, Red, or Yellow. Skip unchanged Green.
-- `--module <name>`: Evaluate only the named module. Update its entry and regenerate graph.
+- `--module <module>`: Evaluate only the named module. Update its entry and regenerate graph.
 - `--explain`: Before asking each question, give the agent's reading of the module so
   the user has a starting point. Useful when entering unfamiliar territory.
 
@@ -231,12 +231,12 @@ answers score 50, not 80.
 ```
 # Claude Code
 /clarity review
-/clarity review --module <name>
+/clarity review --module <module>
 /clarity review --deep
 
 # Windsurf, Cursor, and others
 @clarity review
-@clarity review --module <name>
+@clarity review --module <module>
 @clarity review --deep
 ```
 
@@ -280,7 +280,7 @@ produces a risk and complexity report on its own. Useful for:
 
 5. **Do not write to `CLARITY_MAP.md`** from this action. Agent estimates are separate
    from user-verified understanding. Tell the user how to promote estimates to verified
-   zones: run `map --module <name>` on any module from the review.
+   zones: run `map --module <module>` on any module from the review.
 
 6. **If `--deep` is set:** for each Red-estimated module, read it in full and produce
    a 3-5 sentence plain-language description of what it appears to do and what the
@@ -290,7 +290,7 @@ produces a risk and complexity report on its own. Useful for:
    Red/Yellow/Green, and the top recommended action.
 
 **Flags:**
-- `--module <name>`: Review only the named module. Write findings to `CLARITY_REVIEW.md`.
+- `--module <module>`: Review only the named module. Write findings to `CLARITY_REVIEW.md`.
 - `--deep`: For each Red-estimated module, produce a detailed plain-language description.
 
 **Important:** Always make the agent-estimate nature of this output explicit to the user.
@@ -347,9 +347,9 @@ the agent checks whether the explanation landed. Use this when:
    it does not exist). If below 70, mark Yellow and note which question revealed the gap.
 
 5. **Without `--quiz`:** do not classify or update the map. The session is informational.
-   Suggest running `map --module <name>` when ready to record the comprehension formally.
+   Suggest running `map --module <module>` when ready to record the comprehension formally.
 
-6. **Tell the user** what they can do next: run `map --module <name>` to record their
+6. **Tell the user** what they can do next: run `map --module <module>` to record their
    understanding, or run `debt --scan` for a full comprehension check.
 
 **Flags:**
@@ -509,7 +509,7 @@ The graph is a single static HTML file — no server, no build step.
 
 `learnship` manages the agent's memory: persistent context, structured phases,
 workflow state across sessions. `clarity` manages the developer's memory: what
-you understand, what you don't, and how to build and transfer that.
+you understand, where the gaps are, and how to build and transfer that.
 
 They are complementary but independent. `clarity` reads `AGENTS.md` if it exists
 to avoid duplicating what `learnship` already tracks, but does not require it.

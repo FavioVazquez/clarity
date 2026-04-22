@@ -11,8 +11,8 @@ AI coding agents generate code at 140-200 lines per minute. A developer reads
 and genuinely understands code at 20-40 lines per minute. The gap is 5-7x and
 grows with every build session.
 
-This is not a new problem — developers have always written more code than they
-fully understand. What changed in 2025-2026 is the rate. A developer using an
+Developers have always written more code than they fully understand. What changed
+in 2025-2026 is the rate. A developer using an
 AI agent can produce in one hour what previously took a day. The comprehension
 rate did not change. The accumulation did.
 
@@ -37,7 +37,7 @@ debt is a property of the code; cognitive debt is a property of the person.
 You can have clean, well-tested, well-structured code and still have cognitive
 debt. The code passes every check. The developer cannot explain why a key
 function is structured the way it is. Six months later, someone modifies that
-function based on a wrong mental model. The bug is invisible until it isn't.
+function based on a wrong mental model. The bug lives silently until something breaks.
 
 ---
 
@@ -47,8 +47,8 @@ Linters measure code quality. Test coverage measures which lines execute.
 Code review measures whether reviewers catch problems. None of these measure
 whether the developer understands what they are reviewing or approving.
 
-This is not a failure of those tools — they were designed for a different
-problem. The gap they leave is the one `clarity` addresses.
+Those tools were designed for a different problem. The gap they leave is the one
+`clarity` addresses.
 
 ---
 
@@ -57,8 +57,7 @@ problem. The gap they leave is the one `clarity` addresses.
 When a team uses AI agents, each developer accumulates cognitive debt
 independently. The team does not have a shared map of what is understood and
 what is not. When someone leaves the project or a new person joins, the
-knowledge that was in one developer's head — including the gaps — does not
-transfer.
+knowledge that was in one developer's head (including the gaps) does not transfer.
 
 Atlan (2026): "Agents repeat work because each agent starts with no memory of
 what sibling agents have already solved." The same applies to humans on the same

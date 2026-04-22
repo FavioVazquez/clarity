@@ -88,6 +88,6 @@ is the evidence that the understanding is there.
 Feynman, R. (1985). *Surely You're Joking, Mr. Feynman!* W. W. Norton & Company.
 
 The technique as a formal learning method was later systematized by others,
-but the core principle — explaining as a test of understanding, not a
-demonstration of it — comes directly from Feynman's own descriptions of
+but the core principle (explaining as a test of understanding, not a
+demonstration of it) comes directly from Feynman's own descriptions of
 how he worked and learned.

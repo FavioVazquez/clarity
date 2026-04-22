@@ -4,7 +4,7 @@
   <p><strong>A knowledge mapping skill for projects built with AI agents.</strong></p>
 
   <p>
-    <a href="https://github.com/FavioVazquez/clarity/releases"><img src="https://img.shields.io/badge/version-1.1.1-1b3a57?style=flat-square" alt="version"></a>
+    <a href="https://github.com/FavioVazquez/clarity/releases"><img src="https://img.shields.io/badge/version-1.1.2-1b3a57?style=flat-square" alt="version"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-00bcd4?style=flat-square" alt="license"></a>
     <a href="https://agentskills.io/specification"><img src="https://img.shields.io/badge/AgentSkills-compatible-1b3a57?style=flat-square" alt="AgentSkills compatible"></a>
     <a href="https://skills.sh/FavioVazquez/clarity"><img src="https://img.shields.io/badge/skills.sh-installable-00bcd4?style=flat-square" alt="skills.sh"></a>
@@ -189,13 +189,13 @@ of a blank page.
 # Claude Code
 /clarity map
 /clarity map --quick         # only new, Red, or Yellow modules
-/clarity map --module auth   # evaluate one module
-/clarity map --explain       # agent reads each module first, then asks
+/clarity map --module <module>   # evaluate one module
+/clarity map --explain            # agent reads each module first, then asks
 
 # Windsurf / others
 @clarity map
 @clarity map --quick
-@clarity map --module auth
+@clarity map --module <module>
 @clarity map --explain
 ```
 
@@ -250,17 +250,17 @@ a structural overview before deciding where to focus `map` or `explain`.
 ```
 # Claude Code
 /clarity review            # full scan
-/clarity review --module auth  # review one module
+/clarity review --module <module>  # review one module
 /clarity review --deep     # adds plain-language descriptions of Red-estimated modules
 
 # Windsurf / others
 @clarity review
-@clarity review --module auth
+@clarity review --module <module>
 @clarity review --deep
 ```
 
 Produces `CLARITY_REVIEW.md`. Does not write to `CLARITY_MAP.md`. Run
-`map --module <name>` to promote any estimate to a user-verified zone.
+`map --module <module>` to promote any estimate to a user-verified zone.
 
 ### `explain`
 
@@ -273,12 +273,12 @@ With `--quiz`, the agent checks comprehension at the end and updates `CLARITY_MA
 
 ```
 # Claude Code
-/clarity explain auth           # agent explains auth module
-/clarity explain auth --quiz    # explain + comprehension check + update map
+/clarity explain <module>           # agent explains the module
+/clarity explain <module> --quiz    # explain + comprehension check + update map
 
 # Windsurf / others
-@clarity explain auth
-@clarity explain auth --quiz
+@clarity explain <module>
+@clarity explain <module> --quiz
 ```
 
 ### `handoff`
@@ -365,7 +365,7 @@ All files are yours. Commit them.
 [learnship](https://github.com/FavioVazquez/learnship) manages the agent's
 memory across sessions: persistent context, structured phases, workflow state.
 
-`clarity` manages yours: what you understand, what you don't, and how to
+`clarity` manages yours: what you understand, where the gaps are, and how to
 transfer that when someone new joins the project.
 
 They are independent. A natural rhythm with both: build a phase with `learnship`,
@@ -381,7 +381,7 @@ already tracks, but does not require it.
 
 The three-zone classification is based on the Feynman technique: if you can
 explain something simply, in your own words, without hedging, you understand it.
-If you can't, you have a gap, regardless of whether the code runs.
+When you cannot, you have a gap, regardless of whether the code runs.
 
 Cognitive debt research (2026) documents a consistent 5-7x gap between AI agent
 output velocity and human comprehension velocity. The gap compounds across sessions

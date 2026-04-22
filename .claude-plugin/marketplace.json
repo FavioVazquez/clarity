@@ -15,7 +15,7 @@
         "repo": "FavioVazquez/clarity"
       },
       "description": "Map what you understand about your codebase, measure cognitive debt from AI-assisted sessions, and generate handoffs that capture comprehension gaps. Works with Claude Code, Windsurf, Cursor, and any AgentSkills-compatible agent.",
-      "version": "1.0.0"
+      "version": "1.1.2"
     }
   ]
 }

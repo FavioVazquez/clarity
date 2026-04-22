@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.2 — 2026-04-22
+
+### Fixes
+- `references/cognitive-debt.md`: removed em-dashes, fixed "invisible until it isn't" negation pattern, rephrased "not a failure of those tools" opener.
+- `references/feynman-technique.md`: removed em-dash in primary source section.
+- `SKILL.md`: unified all `--module <name>` references to `--module <module>` for consistency with README. Fixed "what you don't" phrasing. Fixed "If you can't" to "When you cannot".
+- `README.md`: fixed "what you don't" and "If you can't" phrasing in *How it relates to learnship* and *The science* sections.
+- `install.sh`: post-install usage message now lists all six actions (`map, debt, review, explain, handoff, status`). Previously only listed four.
+- `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`: version synced to match SKILL.md and README (was `1.0.0`).
+
 ## 1.1.1 — 2026-04-22
 
 ### Fixes
