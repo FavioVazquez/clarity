@@ -4,8 +4,8 @@ description: >
   A knowledge mapping skill for projects built with AI agents. Use when you want
   to map what you actually understand about your own codebase, measure cognitive
   debt from AI-assisted sessions, or generate a handoff that captures
-  comprehension gaps — not just code state. Invoke with @clarity followed by
-  one of: map, debt, handoff, or status.
+  comprehension gaps — not just code state. Invoke with /clarity on Claude Code
+  or @clarity on Windsurf, followed by one of: map, debt, handoff, or status.
 license: MIT
 compatibility: Works with any AgentSkills-compatible agent — Claude Code, Windsurf, Cursor, GitHub Copilot, Gemini CLI, Amp, Warp, Cline, Codex, and more.
 metadata:
@@ -31,7 +31,18 @@ and [references/feynman-technique.md](references/feynman-technique.md).
 
 ### `map` — Knowledge map
 
-**Trigger:** `@clarity map` (optionally: `@clarity map --module <name>` or `@clarity map --quick`)
+**Trigger:**
+```
+# Claude Code
+/clarity map
+/clarity map --quick
+/clarity map --module <name>
+
+# Windsurf, Cursor, and others
+@clarity map
+@clarity map --quick
+@clarity map --module <name>
+```
 
 **What to do:**
 
@@ -95,8 +106,18 @@ what the user actually knows, not what the agent thinks they know.
 
 ### `debt` — Cognitive debt measurement
 
-**Trigger:** `@clarity debt` (optionally: `@clarity debt --history` or
-`@clarity debt --threshold <0-100>`)
+**Trigger:**
+```
+# Claude Code
+/clarity debt
+/clarity debt --history
+/clarity debt --threshold <0-100>
+
+# Windsurf, Cursor, and others
+@clarity debt
+@clarity debt --history
+@clarity debt --threshold <0-100>
+```
 
 **What to do:**
 
@@ -167,13 +188,23 @@ not be reproduced under pressure is a 50, not an 80.
 
 ### `handoff` — Context transfer
 
-**Trigger:** `@clarity handoff` (optionally: `@clarity handoff --import` or
-`@clarity handoff --sync`)
+**Trigger:**
+```
+# Claude Code
+/clarity handoff
+/clarity handoff --import
+/clarity handoff --sync
+
+# Windsurf, Cursor, and others
+@clarity handoff
+@clarity handoff --import
+@clarity handoff --sync
+```
 
 **What to do (default — export):**
 
-1. **Read `CLARITY_MAP.md`** in full. If it does not exist, run `@clarity map` first
-   and tell the user.
+1. **Read `CLARITY_MAP.md`** in full. If it does not exist, tell the user to run
+   `map` first and stop.
 
 2. **Read `AGENTS.md`** if it exists. Do not duplicate anything already there.
    The handoff captures the human knowledge layer — not the technical project state.
@@ -219,13 +250,20 @@ not be reproduced under pressure is a 50, not an 80.
 After an onboarding or pairing session, `--sync` re-evaluates any modules that
 changed status: modules the new person understood better than the handoff suggested
 (upgrade Yellow or Red to Green) or modules that revealed new gaps (downgrade to Red).
-Run `@clarity map --quick` internally and update `CLARITY_MAP.md` and the graph.
+Run `map --quick` internally and update `CLARITY_MAP.md` and the graph.
 
 ---
 
 ### `status` — Project knowledge snapshot
 
-**Trigger:** `@clarity status`
+**Trigger:**
+```
+# Claude Code
+/clarity status
+
+# Windsurf, Cursor, and others
+@clarity status
+```
 
 **What to do:**
 
@@ -287,21 +325,21 @@ They are complementary but independent. `clarity` reads `AGENTS.md` if it exists
 to avoid duplicating what `learnship` already tracks, but does not require it.
 
 If you use both, a natural rhythm is: build with `learnship`, then run
-`@clarity debt` at the end of each phase. Run `@clarity map` before any phase
-where you are entering unfamiliar territory.
+`/clarity debt` (Claude Code) or `@clarity debt` (Windsurf) at the end of each phase.
+Run `map` before any phase where you are entering unfamiliar territory.
 
 ---
 
 ## When to use each action
 
-| Situation | Action |
-|-----------|--------|
-| Starting a new phase or returning after a break | `@clarity map` |
-| End of a long AI-assisted build session | `@clarity debt` |
-| Before a code review, you want to see the risk zones | `@clarity status` |
-| Someone new is joining the project | `@clarity handoff` |
-| You are the person joining an existing project | `@clarity handoff --import` |
-| After an onboarding session | `@clarity handoff --sync` |
+| Situation | Claude Code | Windsurf / others |
+|-----------|-------------|-------------------|
+| Starting a new phase or returning after a break | `/clarity map` | `@clarity map` |
+| End of a long AI-assisted build session | `/clarity debt` | `@clarity debt` |
+| Before a code review — see the risk zones | `/clarity status` | `@clarity status` |
+| Someone new is joining the project | `/clarity handoff` | `@clarity handoff` |
+| You are the person joining an existing project | `/clarity handoff --import` | `@clarity handoff --import` |
+| After an onboarding session | `/clarity handoff --sync` | `@clarity handoff --sync` |
 
 ---
 

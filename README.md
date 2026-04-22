@@ -12,6 +12,7 @@
 
   <p>
     <a href="#installation">Install</a> &bull;
+    <a href="#usage">Usage</a> &bull;
     <a href="#actions">Actions</a> &bull;
     <a href="#the-visual-map">Visual map</a> &bull;
     <a href="#how-it-relates-to-learnship">learnship</a> &bull;
@@ -19,6 +20,86 @@
     <a href="CHANGELOG.md">Changelog</a>
   </p>
 </div>
+
+---
+
+## Installation
+
+### Windsurf (easiest)
+
+```bash
+npx skills add FavioVazquez/clarity
+```
+
+Installs to the current workspace via the [skills CLI](https://skills.sh).
+Also available at [skills.sh/FavioVazquez/clarity](https://skills.sh/FavioVazquez/clarity).
+
+### Claude Code — plugin marketplace
+
+Two steps: add the marketplace, then install the plugin.
+
+```
+/plugin marketplace add FavioVazquez/clarity
+/plugin install clarity@clarity-marketplace
+```
+
+### curl one-liner (any agent)
+
+```bash
+# Workspace — current project only (works with all agents)
+curl -fsSL https://raw.githubusercontent.com/FavioVazquez/clarity/main/install.sh | bash
+
+# Global — Claude Code
+curl -fsSL https://raw.githubusercontent.com/FavioVazquez/clarity/main/install.sh | bash -s -- --global --agent claude
+
+# Global — Windsurf
+curl -fsSL https://raw.githubusercontent.com/FavioVazquez/clarity/main/install.sh | bash -s -- --global --agent windsurf
+
+# Uninstall
+curl -fsSL https://raw.githubusercontent.com/FavioVazquez/clarity/main/install.sh | bash -s -- --uninstall
+```
+
+### git clone
+
+```bash
+# Workspace (all agents)
+git clone --depth 1 https://github.com/FavioVazquez/clarity .agents/skills/clarity
+
+# Global — Claude Code
+git clone --depth 1 https://github.com/FavioVazquez/clarity ~/.claude/skills/clarity
+
+# Global — Windsurf
+git clone --depth 1 https://github.com/FavioVazquez/clarity ~/.codeium/windsurf/skills/clarity
+```
+
+### Compatibility
+
+Works with any [AgentSkills-compatible](https://agentskills.io/specification)
+agent: Claude Code, Windsurf, Cursor, GitHub Copilot, Gemini CLI, Amp, Warp,
+Cline, Codex, and more.
+
+---
+
+## Usage
+
+Invocation syntax depends on your agent. The skill name and all actions are
+identical; only the prefix differs.
+
+| Agent | Prefix | Example |
+|-------|--------|---------|
+| **Claude Code** | `/clarity` | `/clarity map` |
+| **Windsurf** | `@clarity` | `@clarity map` |
+| **Cursor, Copilot, others** | `@clarity` | `@clarity map` |
+
+Quick reference:
+
+| What you want to do | Claude Code | Windsurf / others |
+|--------------------|-------------|-------------------|
+| Build the knowledge map | `/clarity map` | `@clarity map` |
+| Measure cognitive debt from today's session | `/clarity debt` | `@clarity debt` |
+| Generate a handoff document | `/clarity handoff` | `@clarity handoff` |
+| Onboard as a new team member | `/clarity handoff --import` | `@clarity handoff --import` |
+| See the project knowledge snapshot | `/clarity status` | `@clarity status` |
 
 ---
 
@@ -48,23 +129,22 @@ persistent, versioned artifact.
 
 | Action | What it produces |
 |--------|-----------------|
-| `@clarity map` | Classifies each module as Green / Yellow / Red based on your answers, writes `CLARITY_MAP.md`, generates `clarity-graph.html` |
-| `@clarity debt` | Asks 3 questions derived from your last diff, scores your answers, logs a Comprehension Score to `CLARITY_MAP.md` |
-| `@clarity handoff` | Generates `CLARITY_HANDOFF.md` for a new team member, or guides you through an existing one with `--import` |
-| `@clarity status` | Shows a concise snapshot of zones, debt score, and last handoff date |
+| `map` | Classifies each module as Green / Yellow / Red based on your answers, writes `CLARITY_MAP.md`, generates `clarity-graph.html` |
+| `debt` | Asks 3 questions derived from your last diff, scores your answers, logs a Comprehension Score to `CLARITY_MAP.md` |
+| `handoff` | Generates `CLARITY_HANDOFF.md` for a new team member, or guides you through an existing one with `--import` |
+| `status` | Shows a concise snapshot of zones, debt score, and last handoff date |
 
 ---
 
 ## The visual map
 
-When you run `@clarity map`, the agent generates `clarity-graph.html` in your
-project root. Open it in any browser — no server, no build step.
+When you run `map`, the agent generates `clarity-graph.html` in your project
+root. Open it in any browser — no server, no build step.
 
 The graph shows every module as a node. Green nodes are understood. Yellow nodes
 have gaps. Red nodes are risk zones. Edges show dependencies between modules.
-An edge that connects a Green node to a Red node turns orange — that is a
-propagation path, where a misunderstood module can affect something you thought
-you knew.
+An edge that connects a Green node to a Red node turns orange — a propagation
+path where a misunderstood module can affect something you thought you knew.
 
 The graph ages. Nodes darken over time if they have not been evaluated recently,
 making accumulated cognitive debt visible at a glance.
@@ -77,16 +157,22 @@ evaluated.
 
 ## Actions
 
-### `@clarity map`
+### `map`
 
-Builds the knowledge map for the project. The agent walks through each module and
-asks two questions: what it does, and what the key decision behind it was. It
-classifies each one based on your answer, not its own analysis.
+Builds the knowledge map for the project. The agent walks through each module,
+asks two questions (what it does, and what the key decision behind it was), and
+classifies each one based on your answer — not its own analysis.
 
 ```
-@clarity map               # full map — all modules
-@clarity map --quick       # only modules that are new, Red, or Yellow
-@clarity map --module auth # evaluate one module
+# Claude Code
+/clarity map
+/clarity map --quick       # only new, Red, or Yellow modules
+/clarity map --module auth # evaluate one module
+
+# Windsurf / others
+@clarity map
+@clarity map --quick
+@clarity map --module auth
 ```
 
 The three zones:
@@ -94,7 +180,7 @@ The three zones:
 - **Yellow:** You knew the what but not the why, or hedged on the key decision.
 - **Red:** You could not explain it, said "I think," or said "the AI wrote it."
 
-### `@clarity debt`
+### `debt`
 
 Measures cognitive debt from the most recent build session. The agent reads your
 last git diff, picks three areas of meaningful logic, and asks:
@@ -104,32 +190,48 @@ last git diff, picks three areas of meaningful logic, and asks:
 - **What happens if** a specific edge case occurs
 
 Each answer is scored 0-100. The session Comprehension Score is the average.
-If the score falls below the threshold (default: 70), the agent flags the session
-as a debt alert before you continue building.
+If it falls below the threshold (default: 70), the agent flags the session as
+a debt alert.
 
 ```
-@clarity debt              # evaluate the current session
-@clarity debt --history    # show the full debt log
-@clarity debt --threshold 60  # change the alert threshold
+# Claude Code
+/clarity debt
+/clarity debt --history
+/clarity debt --threshold 60
+
+# Windsurf / others
+@clarity debt
+@clarity debt --history
+@clarity debt --threshold 60
 ```
 
-### `@clarity handoff`
+### `handoff`
 
 Produces a `CLARITY_HANDOFF.md` that captures everything the next person needs
 to know that is not in the code: which areas are understood, which are not,
 what the open questions are, and what to do first.
 
 ```
-@clarity handoff           # generate the handoff document
-@clarity handoff --import  # you are the new person — agent guides you through it
-@clarity handoff --sync    # after onboarding, update the map with new understanding
+# Claude Code
+/clarity handoff           # generate the handoff document
+/clarity handoff --import  # you are the new person — agent guides you through it
+/clarity handoff --sync    # after onboarding, update the map with new understanding
+
+# Windsurf / others
+@clarity handoff
+@clarity handoff --import
+@clarity handoff --sync
 ```
 
-### `@clarity status`
+### `status`
 
 A five-line snapshot of the current knowledge state.
 
 ```
+# Claude Code
+/clarity status
+
+# Windsurf / others
 @clarity status
 ```
 
@@ -142,9 +244,8 @@ A five-line snapshot of the current knowledge state.
 **Nodes** represent modules. Size is proportional to line count. Color reflects
 knowledge zone: green, yellow, or red. Nodes fade over time when not evaluated.
 
-**Edges** represent dependencies between modules — which modules import or call
-others. An edge turns orange when it connects a well-understood module to a
-risk zone.
+**Edges** represent dependencies between modules. An edge turns orange when it
+connects a well-understood module to a risk zone.
 
 **Interactions:**
 - Hover over a node to see its name, zone, and last evaluation date
@@ -153,9 +254,8 @@ risk zone.
 - Filter to show only Red zones, only stale nodes, or only risk-propagation edges
 - A timeline panel at the bottom shows the Comprehension Score history
 
-The graph is generated by the agent and lives as a single file in your project
-root. The agent updates it whenever you run `@clarity map` or `@clarity debt`.
-You can commit it, share it, or open it offline.
+The agent updates the graph whenever you run `map` or `debt`. It is a single
+static file — commit it, share it, or open it offline.
 
 ---
 
@@ -167,65 +267,7 @@ CLARITY_HANDOFF.md   handoff snapshot (generated on request)
 clarity-graph.html   interactive visual map
 ```
 
-These files are yours. Commit them. The graph file makes the knowledge state
-of the project as visible as a CI dashboard.
-
----
-
-## Installation
-
-### Option 1 — `npx skills` (easiest)
-
-```bash
-npx skills add FavioVazquez/clarity
-```
-
-Installs to the current workspace. Also available at
-[skills.sh/FavioVazquez/clarity](https://skills.sh/FavioVazquez/clarity).
-
-### Option 2 — Claude Code plugin marketplace
-
-First add the marketplace, then install the plugin:
-
-```
-/plugin marketplace add FavioVazquez/clarity
-/plugin install clarity@clarity-marketplace
-```
-
-### Option 3 — `curl` one-liner
-
-```bash
-# Workspace (current project only)
-curl -fsSL https://raw.githubusercontent.com/FavioVazquez/clarity/main/install.sh | bash
-
-# Global — Claude Code
-curl -fsSL https://raw.githubusercontent.com/FavioVazquez/clarity/main/install.sh | bash -s -- --global --agent claude
-
-# Global — Windsurf
-curl -fsSL https://raw.githubusercontent.com/FavioVazquez/clarity/main/install.sh | bash -s -- --global --agent windsurf
-
-# Uninstall
-curl -fsSL https://raw.githubusercontent.com/FavioVazquez/clarity/main/install.sh | bash -s -- --uninstall
-```
-
-### Option 4 — `git clone`
-
-```bash
-# Workspace (all agents)
-git clone --depth 1 https://github.com/FavioVazquez/clarity .agents/skills/clarity
-
-# Global — Claude Code
-git clone --depth 1 https://github.com/FavioVazquez/clarity ~/.claude/skills/clarity
-
-# Global — Windsurf
-git clone --depth 1 https://github.com/FavioVazquez/clarity ~/.codeium/windsurf/skills/clarity
-```
-
-### Compatibility
-
-Works with any [AgentSkills-compatible](https://agentskills.io/specification)
-agent, including Claude Code, Windsurf, Cursor, GitHub Copilot, Gemini CLI,
-Amp, Warp, Cline, and Codex.
+These files are yours. Commit them.
 
 ---
 
@@ -238,9 +280,8 @@ memory across sessions: persistent context, structured phases, workflow state.
 transfer that when someone new joins the project.
 
 They are independent. If you use both, a natural rhythm is: build a phase with
-`learnship`, then run `@clarity debt` at the end of the phase. Run
-`@clarity map` before any phase where you are entering territory you have not
-touched in a while.
+`learnship`, then run `debt` at the end of the phase. Run `map` before any phase
+where you are entering territory you have not touched in a while.
 
 `clarity` reads `AGENTS.md` if it exists to avoid duplicating what `learnship`
 already tracks, but does not require it.
